@@ -2,6 +2,7 @@
 using KafeApı.Aplication.DTOS.TableDtos;
 using KafeApı.Aplication.Interfaces;
 using KafeApı.Aplication.Services.Abstract;
+using KafeApı.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace KafeApı.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TablesController : ControllerBase
+    public class TablesController : BaseController
     {
         private readonly ITableServices _tableServices;
        
@@ -24,86 +25,44 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> GetAllTables()
         {
             var tables = await _tableServices.GetAllTables();
-            if (!tables.Succes)
-            {
-                if (tables.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(tables);
-                }
-                return BadRequest(tables);
-            }
-            return Ok(tables);
+            return CreateResponse(tables);
+
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdTable(int id)
         {
             var table = await _tableServices.GetByIdTable(id);
-            if (!table.Succes)
-            {
-                if (table.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(table);
-                }
-                return BadRequest(table);
-            }
-            return Ok(table);
+            return CreateResponse(table);
+
         }
 
         [HttpGet("getbytablenumber")]
         public async Task<IActionResult> GetByTableNumber(int tableNumber)
         {
             var table = await _tableServices.GetByTableNumber(tableNumber);
-            if (!table.Succes)
-            {
-                if (table.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(table);
-                }
-                return BadRequest(table);
-            }
-            return Ok(table);
+            return CreateResponse(table);
+
         }
 
         [HttpPost]
         public async Task<IActionResult> AddTable(CreatTableDto dto)
         {
             var entity = await _tableServices.AddTable(dto);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes is ErrorCodes.ValidationError or ErrorCodes.DuplicateEror)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
-            return Ok(entity);
+            return CreateResponse(entity);
+
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateTable(int id, UpdateTableDto dto)
+        public async Task<IActionResult> UpdateTable( UpdateTableDto dto)
         {
-            if (id != dto.Id)
-            {
-                return BadRequest(new ResponseDto<object>
-                {
-                    Succes = false,
-                    ErrorCodes = ErrorCodes.ValidationError,
-                    Message = "Id mismatch"
-                });
-            }
+            
 
             var entity = await _tableServices.UpdateTable(dto);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes is ErrorCodes.ValidationError or ErrorCodes.NotFound)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
+            return CreateResponse(entity);
 
-            return Ok(entity);
+
+            
 
         }
 
@@ -111,15 +70,8 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> DeleteTable(int id)
         {
             var entity = await _tableServices.DeleteTable(id);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
-            return Ok(entity);
+            return CreateResponse(entity);
+
         }
 
 
@@ -127,30 +79,16 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> GetAllActiveTablesGeneric()
         {
             var tables = await _tableServices.GetAllActiveTablesGeneric();
-            if (!tables.Succes)
-            {
-                if (tables.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(tables);
-                }
-                return BadRequest(tables);
-            }
-            return Ok(tables);
+            return CreateResponse(tables);
+
         }
 
         [HttpGet("getallisactivetables")]
         public async Task<IActionResult> GetAllActiveTables()
         {
             var tables = await _tableServices.GetAllActiveTables();
-            if (!tables.Succes)
-            {
-                if (tables.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(tables);
-                }
-                return BadRequest(tables);
-            }
-            return Ok(tables);
+            return CreateResponse(tables);
+
         }
 
 
@@ -160,16 +98,8 @@ namespace KafeApı.API.Controllers
            
 
             var entity = await _tableServices.UpdateTableStatusById(id);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes is ErrorCodes.ValidationError or ErrorCodes.NotFound)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
+            return CreateResponse(entity);
 
-            return Ok(entity);
 
         }
 
@@ -180,16 +110,8 @@ namespace KafeApı.API.Controllers
 
 
             var entity = await _tableServices.UpdateTableStatusByTableNumber(tableNumber);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes is ErrorCodes.ValidationError or ErrorCodes.NotFound)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
+            return CreateResponse(entity);
 
-            return Ok(entity);
 
         }
     }

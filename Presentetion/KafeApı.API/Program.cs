@@ -2,7 +2,10 @@ using FluentValidation;
 using KafeApý.Aplication.DTOS.CategoryDtos;
 using KafeApý.Aplication.DTOS.MenuItemDtos;
 using KafeApý.Aplication.DTOS.MenuItemsDtos;
+using KafeApý.Aplication.DTOS.OrderDtos;
+using KafeApý.Aplication.DTOS.OrderItemDtos;
 using KafeApý.Aplication.DTOS.TableDtos;
+using KafeApý.Aplication.Helpers;
 using KafeApý.Aplication.Interfaces;
 using KafeApý.Aplication.Mapping;
 using KafeApý.Aplication.Services.Abstract;
@@ -28,9 +31,15 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITableRepository, TableRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderReposiory>();
+builder.Services.AddScoped<IMenuItemRepository, MenuItemRepository>();
 builder.Services.AddScoped<ICategoryServices, CategoryServices>();
 builder.Services.AddScoped<ITableServices, TableServices>();
 builder.Services.AddScoped<IMenuItemServices, MenuItemServices>();
+builder.Services.AddScoped<IOrderItemServices, OrderItemServices>();
+builder.Services.AddScoped<IOrderServices, OrderServices>();
+builder.Services.AddScoped<IAuthServices, AuthServices>();
+builder.Services.AddScoped<TokenHelpers>();
 
 
 //builder.Services.AddAutoMapper(typeof(GeneralMapping).Assembly); bu ksýým hata verdi ve alternatifini yazdým kod eksik çalýþýrsa çöz burayý
@@ -48,6 +57,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateMenuItemDto>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateTableDto>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreatTableDto>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateOrderItemDto>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderItemDto>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateOrderDto>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderDto>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

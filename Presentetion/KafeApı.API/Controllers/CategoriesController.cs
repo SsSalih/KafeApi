@@ -8,7 +8,7 @@ namespace KafeApı.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoriesController : ControllerBase
+    public class CategoriesController : BaseController
     {
         private readonly ICategoryServices _categoryServices;
 
@@ -21,46 +21,21 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> GetAllCategories()
         {
             var categories = await _categoryServices.GetAllCategories();
-            if(!categories.Succes)
-            {
-               if(categories.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return Ok(categories);
-                }
-                return BadRequest(categories);
-            }
-            return Ok(categories);
+           return CreateResponse(categories);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdCategory(int id)
         {
             var category = await _categoryServices.GetByIdCategory(id);
-            if(!category.Succes)
-            {
-                if (category.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return NotFound(category);
-                }
-                return BadRequest(category);
-            }
-            return Ok(category);
+            return CreateResponse(category);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddCategory(CreatCategoryDto dto) 
         {
             var entity = await _categoryServices.AddCategory(dto);
-            if (!entity.Succes)
-            {
-                if(entity.ErrorCodes == ErrorCodes.ValidationError) 
-                {
-                    return Ok(entity);
-                }
-
-                return BadRequest(entity);
-            }
-            return Ok(entity);
+            return CreateResponse(entity);
         }
 
         [HttpPut("{id}")]
@@ -69,33 +44,22 @@ namespace KafeApı.API.Controllers
             
 
             var result =await _categoryServices.UpdateCategory(dto);
-                if (!result.Succes)
-                {
-                    if(result.ErrorCodes is ErrorCodes.NotFound or ErrorCodes.ValidationError) 
-                    {
-                        return Ok(result);
-                    }
-
-                    return BadRequest(result);
-                }
-                return Ok(result);
-            
+            return CreateResponse(result);
         }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteCategory(int id) 
         {
             var result =await _categoryServices.DeleteCategory(id);
-            if(!result.Succes)
-            {
-                if(result.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return NotFound(result);
-                }
-
-                return BadRequest(result);
-            }
-            return Ok(result);
+            return CreateResponse(result);
         }
+
+        [HttpGet("getCategoriesWithMenuItem")]
+        public async Task<IActionResult> GetCategoriesWithMenuItem()
+        {
+            var result = await _categoryServices.GetCategoriesWithMenuItem();
+            return CreateResponse(result);
+        }
+        
     }
 }

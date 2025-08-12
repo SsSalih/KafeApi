@@ -144,26 +144,35 @@ namespace KafeApı.Aplication.Services.Concreate
             
         }
 
-        public async Task<ResponseDto<DetailMenuItemDto>> GetDetailMenuItemDto(int id)
+        public async Task<ResponseDto<DetailMenuItemDto>> GetByIdMenuItem(int id)
         {
             try
             {
                 var menuItem = await _menuItemRepository.GetByIdAsync(id);
-                var category = await _categoryRepository.GetByIdAsync(menuItem.CategoryId);
-                if (menuItem == null)
+                if(menuItem == null) 
                 {
-                    return new ResponseDto<DetailMenuItemDto> { Message = "Menü öğesi bulunamadı", Succes = false, ErrorCode = ErrorCodes.NotFound };
+                return new ResponseDto<DetailMenuItemDto> { Data=null, Succes = false,ErrorCode= ErrorCodes.NotFound,Message ="aranılan ürün bulunamadı" };
                 }
-                var result = _mapper.Map<DetailMenuItemDto>(menuItem);
-                return new ResponseDto<DetailMenuItemDto> {Succes=true, Data= result, Message = "Ürünler başarıyla getirildi " };
+                var category = await _categoryRepository.GetByIdAsync(menuItem.CategoryId);
+                var result =_mapper.Map<DetailMenuItemDto>(menuItem);
+                return new ResponseDto<DetailMenuItemDto> 
+                {
+                    Data = result,
+                    Succes = true,
+                    
+                };
+
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
-                return new ResponseDto<DetailMenuItemDto> { Message = ex.Message, Succes = false, ErrorCode = ErrorCodes.Exception };
+                return new ResponseDto<DetailMenuItemDto> { Data = null, Succes = false, ErrorCode = ErrorCodes.Exception, Message = "bir hata oluştu" };
             }
             
+
         }
+
+        
 
         
 

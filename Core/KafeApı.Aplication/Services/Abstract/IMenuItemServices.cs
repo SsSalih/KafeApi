@@ -15,10 +15,10 @@ namespace KafeApı.Aplication.Services.Abstract
     public interface IMenuItemServices
     {
         Task<ResponseDto<List<ResultMenuItemDto>>> GetAllMenuItems();
-        Task<ResponseDto<DetailMenuItemDto>> GetDetailMenuItemDto(int id);
+       
         Task <ResponseDto<object>> AddMenuItem(CreateMenuItemDto dto);
         Task<ResponseDto<object>> UpdateMenuItem(UpdateMenuItemDto dto);
-
+        Task<ResponseDto<DetailMenuItemDto>> GetByIdMenuItem(int id);
         Task<ResponseDto<object>> DelteMenuItem(int id);
     }
 }

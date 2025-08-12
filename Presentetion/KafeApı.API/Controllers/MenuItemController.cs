@@ -1,17 +1,17 @@
 ﻿using KafeApı.Aplication.DTOS.CategoryDtos;
 using KafeApı.Aplication.DTOS.MenuItemDtos;
 using KafeApı.Aplication.DTOS.MenuItemsDtos;
-using KafeApı.Aplication.DTOS.MenuItemsDtos;
 using KafeApı.Aplication.DTOS.ResponseDtos;
 using KafeApı.Aplication.Services.Abstract;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KafeApı.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MenuItemController : ControllerBase
+    public class MenuItemController : BaseController
     {
         private readonly IMenuItemServices _menuItemServices;
 
@@ -24,31 +24,15 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> GetAllMenuItems()
         {
             var cateogries = await _menuItemServices.GetAllMenuItems();
-            if (!cateogries.Succes)
-            {
-                if (cateogries.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return NotFound(cateogries);
-                }
-                return BadRequest(cateogries);
-            }
-            return Ok(cateogries);
+            return CreateResponse(cateogries);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetDetailMenuItem(int id)
-        {
 
-            var category = await _menuItemServices.GetDetailMenuItemDto(id);
-            if (!category.Succes)
-            {
-                if (category.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return NotFound(category);
-                }
-                return BadRequest(category);
-            }
-            return Ok(category);
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetByIdMenuItem(int id)
+        {
+            var result = await _menuItemServices.GetByIdMenuItem(id);
+            return CreateResponse(result);
         }
 
         [HttpPut]
@@ -57,16 +41,7 @@ namespace KafeApı.API.Controllers
             
 
             var result = await _menuItemServices.UpdateMenuItem(dto);
-            if (!result.Succes) 
-            {
-                if(result.ErrorCodes is ErrorCodes.NotFound or ErrorCodes.ValidationError)
-                {
-                    return Ok(result);
-                }
-
-                return BadRequest(result);
-            }
-            return Ok(result);
+            return CreateResponse(result);
 
         }
 
@@ -74,15 +49,7 @@ namespace KafeApı.API.Controllers
         public async Task<IActionResult> AddMenuItem(CreateMenuItemDto dto)
         {
             var entity = await _menuItemServices.AddMenuItem(dto);
-            if (!entity.Succes)
-            {
-                if (entity.ErrorCodes is ErrorCodes.ValidationError or ErrorCodes.NotFound)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest(entity);
-            }
-            return Ok(entity);
+            return CreateResponse(entity);
         }
 
         [HttpDelete]
@@ -90,16 +57,9 @@ namespace KafeApı.API.Controllers
         {
 
             var result = await _menuItemServices.DelteMenuItem(id);
-            if (!result.Succes)
-            {
-                if (result.ErrorCodes == ErrorCodes.NotFound)
-                {
-                    return NotFound(result);
-                }
-                return BadRequest(result);
-            }
-            return Ok(result);
+            return CreateResponse(result);
 
         }
+
     }
 }
