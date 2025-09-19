@@ -203,9 +203,9 @@ namespace KafeApı.Aplication.Services.Concreate
                     {
                         return new ResponseDto<object> { Succes = false, Data = dto, Message = "kategori bulunamadı", ErrorCode = ErrorCodes.Exception };
                     }
-                    var newmenuitem = _mapper.Map(dto, menuitem
-                        );
-                await _menuItemRepository.UpdateAsync(newmenuitem);
+
+                    var newmenuitem = _mapper.Map(dto, menuitem);
+                    await _menuItemRepository.UpdateAsync(newmenuitem);
 
                 return new ResponseDto<object> { Succes = true, Message = "Menü öğesi başarıyla güncellendi.", Data = null };
             }

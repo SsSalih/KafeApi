@@ -1,34 +1,60 @@
+ï»¿using AspNetCoreRateLimit;
 using FluentValidation;
-using KafeApý.Aplication.DTOS.CategoryDtos;
-using KafeApý.Aplication.DTOS.MenuItemDtos;
-using KafeApý.Aplication.DTOS.MenuItemsDtos;
-using KafeApý.Aplication.DTOS.OrderDtos;
-using KafeApý.Aplication.DTOS.OrderItemDtos;
-using KafeApý.Aplication.DTOS.TableDtos;
-using KafeApý.Aplication.Helpers;
-using KafeApý.Aplication.Interfaces;
-using KafeApý.Aplication.Mapping;
-using KafeApý.Aplication.Services.Abstract;
-using KafeApý.Aplication.Services.Concreate;
-using KafeApý.Persistance.Context;
-using KafeApý.Persistance.Repository;
+using KafeApÄ±.Aplication.DTOS.CategoryDtos;
+using KafeApÄ±.Aplication.DTOS.MenuItemDtos;
+using KafeApÄ±.Aplication.DTOS.MenuItemsDtos;
+using KafeApÄ±.Aplication.DTOS.OrderDtos;
+using KafeApÄ±.Aplication.DTOS.OrderItemDtos;
+using KafeApÄ±.Aplication.DTOS.TableDtos;
+using KafeApÄ±.Aplication.DTOS.UserDtos; // âœ… RegisterDto iÃ§in gerekli
+using KafeApÄ±.Aplication.Helpers;
+using KafeApÄ±.Aplication.Interfaces;
+using KafeApÄ±.Aplication.Mapping;
+using KafeApÄ±.Aplication.Services.Abstract;
+using KafeApÄ±.Aplication.Services.Concreate;
+using KafeApÄ±.Aplication.Validators.CafeInfo;
+using KafeApÄ±.Aplication.Validators.Review;
+using KafeApÄ±.Persistance.Context;
+using KafeApÄ±.Persistance.Context.Identity;
+using KafeApÄ±.Persistance.Middlewares;
+using KafeApÄ±.Persistance.Repository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
+using Serilog.Settings.Configuration;
+using Serilog.Sinks.MSSqlServer;
+using System.Collections.ObjectModel;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddDbContext<AppIdentityDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddIdentity<AppIdentityUser, AppIdentityRole>(opt =>
+{
+    opt.User.RequireUniqueEmail = true;
+    opt.Password.RequireDigit = false;
+    opt.Password.RequiredLength = 6;
+    opt.Password.RequireUppercase = false;
+    opt.Password.RequireLowercase = false;
+    opt.Password.RequireNonAlphanumeric = false;
+}).AddEntityFrameworkStores<AppIdentityDbContext>()
+   .AddDefaultTokenProviders();
+
 builder.Services.AddControllers();
 
-//burada interface ve repository baðlamalarý yapýldý
-
+// Interface ve repository baÄŸlamalarÄ±
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ITableRepository, TableRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderReposiory>();
@@ -40,16 +66,16 @@ builder.Services.AddScoped<IOrderItemServices, OrderItemServices>();
 builder.Services.AddScoped<IOrderServices, OrderServices>();
 builder.Services.AddScoped<IAuthServices, AuthServices>();
 builder.Services.AddScoped<TokenHelpers>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<ICafeInfoServices, CafeInfoServices>();
+builder.Services.AddScoped<IReviewServices, ReviewServices>();
 
-
-//builder.Services.AddAutoMapper(typeof(GeneralMapping).Assembly); bu ksýým hata verdi ve alternatifini yazdým kod eksik çalýþýrsa çöz burayý
-
-
-
+// AutoMapper konfigÃ¼rasyonu
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<GeneralMapping>());
 
-// validation tamamlalarý burada yapýldý
-builder.Services.AddValidatorsFromAssemblyContaining<CreatCategoryDto>(); 
+// Validation konfigÃ¼rasyonlarÄ±
+builder.Services.AddValidatorsFromAssemblyContaining<CreatCategoryDto>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateCategoryDto>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateMenuItemDto>();
@@ -64,21 +90,68 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderItemDto>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateOrderDto>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderDto>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// âœ… RegisterDto validator eklendi
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterDto>();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginDto>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<AddCafeInfoValidate>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateCafeInfoValidate>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateReviewValidate>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateReviewValidate>();
+
+// OpenAPI
 builder.Services.AddOpenApi();
+
+// JWT yapÄ±landÄ±rmasÄ±
+builder.Services.AddAuthentication(opt =>
+{
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        //RoleClaimType = "role"
+    };
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor(); 
+
+// Serilog config
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
+builder.Host.UseSerilog();
+
+//fazla atilan istekleri engelleme
+
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(
+    builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 var app = builder.Build();
 
-builder.Services.AddEndpointsApiExplorer();
-
-app.MapScalarApiReference(
-    opt =>
-    {
-        opt.Title = "Kafe Apý v1";
-        opt.Theme = ScalarTheme.BluePlanet;
-        opt.DefaultHttpClient = new(ScalarTarget.Http, ScalarClient.Http11);
-    }
-    );//thema tanýmlarý burada yapýldý
+app.MapScalarApiReference(opt =>
+{
+    opt.Title = "Kafe ApÄ± v1";
+    opt.Theme = ScalarTheme.BluePlanet;
+    opt.DefaultHttpClient = new(ScalarTarget.Http, ScalarClient.Http11);
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -86,9 +159,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseIpRateLimiting();
+
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<SerilogMiddleware>();
 
 app.MapControllers();
 

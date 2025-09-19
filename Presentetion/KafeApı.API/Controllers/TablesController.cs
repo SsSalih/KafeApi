@@ -3,12 +3,13 @@ using KafeApı.Aplication.DTOS.TableDtos;
 using KafeApı.Aplication.Interfaces;
 using KafeApı.Aplication.Services.Abstract;
 using KafeApı.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KafeApı.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/tables")]
     [ApiController]
     public class TablesController : BaseController
     {
@@ -21,6 +22,7 @@ namespace KafeApı.API.Controllers
             
         }
 
+        //[Authorize(Roles = "admin,employe")]
         [HttpGet]
         public async Task<IActionResult> GetAllTables()
         {
@@ -29,6 +31,7 @@ namespace KafeApı.API.Controllers
 
         }
 
+        [Authorize(Roles = "admin,employe")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdTable(int id)
         {
@@ -37,14 +40,16 @@ namespace KafeApı.API.Controllers
 
         }
 
-        [HttpGet("getbytablenumber")]
-        public async Task<IActionResult> GetByTableNumber(int tableNumber)
+        [Authorize(Roles = "admin,employe")]
+        [HttpGet("tablenumber")]
+        public async Task<IActionResult> GetByTableNumber([FromQuery]int tableNumber)
         {
             var table = await _tableServices.GetByTableNumber(tableNumber);
             return CreateResponse(table);
 
         }
 
+        [Authorize(Roles = "admin,employe")]
         [HttpPost]
         public async Task<IActionResult> AddTable(CreatTableDto dto)
         {
@@ -53,6 +58,7 @@ namespace KafeApı.API.Controllers
 
         }
 
+        [Authorize(Roles = "admin,employe")]
         [HttpPut]
         public async Task<IActionResult> UpdateTable( UpdateTableDto dto)
         {
@@ -66,6 +72,7 @@ namespace KafeApı.API.Controllers
 
         }
 
+        [Authorize(Roles = "admin,employe")]
         [HttpDelete]
         public async Task<IActionResult> DeleteTable(int id)
         {
@@ -74,16 +81,17 @@ namespace KafeApı.API.Controllers
 
         }
 
+        //[Authorize(Roles = "admin,employe")]
+        //[HttpGet("isactivetables")]
+        //public async Task<IActionResult> GetAllActiveTablesGeneric()
+        //{
+        //    var tables = await _tableServices.GetAllActiveTablesGeneric();
+        //    return CreateResponse(tables);
 
-        [HttpGet("getallisactivetablesgeneric")]
-        public async Task<IActionResult> GetAllActiveTablesGeneric()
-        {
-            var tables = await _tableServices.GetAllActiveTablesGeneric();
-            return CreateResponse(tables);
+        //}
 
-        }
-
-        [HttpGet("getallisactivetables")]
+        [Authorize(Roles = "admin,employe")]
+        [HttpGet("isactivetables")]
         public async Task<IActionResult> GetAllActiveTables()
         {
             var tables = await _tableServices.GetAllActiveTables();
@@ -91,20 +99,18 @@ namespace KafeApı.API.Controllers
 
         }
 
-
-        [HttpPut("updatetablestatusbyid")]
+        [Authorize(Roles = "admin,employe")]
+        [HttpPut("statusbyid")]
         public async Task<IActionResult> UpdateTableStatusById(int id)
         {
-           
 
             var entity = await _tableServices.UpdateTableStatusById(id);
             return CreateResponse(entity);
 
-
         }
 
-
-        [HttpPut("updatetablestatusbytablenumber")]
+        [Authorize(Roles = "admin,employe")]
+        [HttpPut("statusbytablenumber")]
         public async Task<IActionResult> UpdateTableStatusByTableNumber(int tableNumber)
         {
 

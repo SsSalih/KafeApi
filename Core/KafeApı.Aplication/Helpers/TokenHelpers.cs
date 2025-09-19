@@ -31,7 +31,7 @@ namespace KafeApı.Aplication.Helpers
             {
                 new Claim("_e", dto.Email),
                 new Claim("_u", dto.Id),
-                new Claim("_r", dto.Role),
+                new Claim("role", dto.Role), 
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
@@ -40,7 +40,7 @@ namespace KafeApı.Aplication.Helpers
                     issuer: _configuration["Jwt:Issuer"],
                     audience: _configuration["Jwt:Audience"],
                     claims: claims,
-                    expires: DateTime.Now.AddMinutes(30),
+                    expires: DateTime.UtcNow.AddMinutes(30),
                     signingCredentials: creadentials
                 );
 

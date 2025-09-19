@@ -1,11 +1,13 @@
 ﻿using KafeApı.Aplication.DTOS.AuthDtos;
+using KafeApı.Aplication.DTOS.UserDtos;
 using KafeApı.Aplication.Services.Abstract;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KafeApı.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : BaseController
     {
@@ -16,11 +18,13 @@ namespace KafeApı.API.Controllers
             _authServices = authServices;
         }
 
-        [HttpPost("generateToken")]
-        public async Task<IActionResult> GenarateToken(TokenDto dto) 
+        [HttpPost]
+        public async Task<IActionResult> GenarateToken(LoginDto dto) 
         {
             var result = await _authServices.GenerateToken(dto);
             return CreateResponse(result);
         }
+
+        
     }
 }
